@@ -74,7 +74,7 @@ def parse_file(filename):
 				obj["opc2"] = 0 # opc2 does not exist for MRRC
 
 				if ("asmname" in vardef.attrib and vardef.attrib["asmname"] == "systemreg" ):
-					obj["reg_name"] = vardef.attrib["asmvalue"] 			
+					obj["reg_name"] = vardef.attrib["asmvalue"]
 				else:
 					obj["reg_name"] = reg_name
 				
@@ -117,7 +117,6 @@ def parse_file(filename):
 									tmp_varfields[key]["msb"] = msb
 									tmp_varfields[key]["lsb"] = lsb
 
-						
 					else:
 						val = int(enc.attrib["v"], 2)
 					obj[key] = val
@@ -128,45 +127,42 @@ def parse_file(filename):
 			else:
 				tmp_gen_objs = [obj]
 
-				for key, v in tmp_varfields.items():
-					varname = v["varname"]
-					debug("Generating %s field ..." % key)
-					for variable in root.find(".//*reg_variables"):
-						if variable.attrib["variable"] == varname:
+				for variable in root.find(".//*reg_variables"):
+					variable_name_iter = variable.attrib["variable"]
+					vals = []
+					new_tmp_gen_objs = []
 
-							vals = []
-							new_tmp_gen_objs = []
+					if "max" in variable.attrib:
+						nb_min = 0
+						nb_max = int(variable.attrib["max"])
+						vals = range(nb_min, nb_max)
+					else:
+						for reg_variable_val in variable:
+							vals.append(int(reg_variable_val.text))
+					debug("\t Gen list is : %r" %vals)
+					for gen in vals:
 
-							if "max" in variable.attrib:
-								nb_min = 0
-								nb_max = int(variable.attrib["max"])
-								vals = range(nb_min, nb_max)
-							else:
-																
-								for reg_variable_val in variable:
-									vals.append(int(reg_variable_val.text))
+						for tmp_obj in tmp_gen_objs:
+							tmp_new_obj = copy.deepcopy(tmp_obj)
+							if "varname_gen" not in tmp_new_obj:
+								tmp_new_obj["varname_gen"]= {}
+							gen_id = gen
 
-							debug("\t Gen list is : %r" %vals)
-							for gen in vals:
-
+							tmp_new_obj["varname_gen"][variable_name_iter] = gen_id
+							for key, v in tmp_varfields.items():
+								varname = v["varname"]
 								size_msk = v["msb"]-v["lsb"] + 1
 								msk = int("1"*size_msk,2)
 								gen_val = v["tmp_val"] | ( (gen&msk)<< v["lsb"] )
-								
-								debug("\t Generating %s=%d and val : %d" % (key, gen, gen_val))
-								for tmp_obj in tmp_gen_objs:
-									tmp_new_obj = copy.deepcopy(tmp_obj)
-									if "varname_gen" not in tmp_new_obj:
-										tmp_new_obj["varname_gen"]= {}
-									gen_id = gen
-									
-									tmp_new_obj["varname_gen"][varname] = gen_id
- 									tmp_new_obj[key] = gen_val
-									new_tmp_gen_objs.append(tmp_new_obj)
-								
-							tmp_gen_objs = list(new_tmp_gen_objs) # Copy the list
 
-							break
+								if varname == variable_name_iter:
+									debug("\t Generating %s=%d and val : %d" % (key, gen, gen_val))
+									tmp_new_obj[key] = gen_val
+
+							new_tmp_gen_objs.append(tmp_new_obj)
+
+					tmp_gen_objs = list(new_tmp_gen_objs) # Copy the list
+					break
 				# Update register name by remplacing <X> variables
 				debug("Registers generated : %d " % len(tmp_gen_objs))
 				for tmp_obj in tmp_gen_objs:
