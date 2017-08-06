@@ -180,13 +180,13 @@ def parse_file(filename):
 	for o in obj_list:
 		ret_list[o["reg_name"]] = o
 
-	return ret_list.values()
+	return ret_list
 
 def gen_entries(objs):
 
 
 	s = ""
-	for obj in objs:
+	for obj in objs.values():
 
 		reg_name = obj["reg_name"]
 		
@@ -199,9 +199,9 @@ def gen_entries(objs):
 
 	return s
 
-def aarch32_registers_files(xml_doc_path):
+def parse_arm_regs(xml_doc_path, is_arm64):
 
-	filename = "AArch32-regindex.xml"
+	filename = "AArch64-regindex.xml" if (is_arm64) else "AArch32-regindex.xml"
 
 	if not os.path.exists(arm_xml_path +"/" +filename):
 		print "Path Incorect"
@@ -217,37 +217,17 @@ def aarch32_registers_files(xml_doc_path):
 		files[f] =1
 
 
-	registers = []
-
+	registers = OrderedDict()
 	for f in files.keys():
-		registers += parse_file(arm_xml_path + "/"+ f)
+		registers.update(parse_file(arm_xml_path + "/"+ f))
 
 	print gen_entries(registers)
 
+def aarch32_registers_files(xml_doc_path):
+	parse_arm_regs(xml_doc_path, False)
 
 def aarch64_registers_files(xml_doc_path):
-
-	filename = "AArch64-regindex.xml"
-
-	if not os.path.exists(arm_xml_path +"/" +filename):
-		print "Path Incorect"
-		return
-
-	tree = ET.parse(arm_xml_path +"/" +filename)
-	root = tree.getroot()	
-	regs = root.findall(".//*register_link")
-
-	files = OrderedDict()
-	for r in regs:
-		f = r.attrib["registerfile"]
-		files[f] =1
-
-
-	registers = []
-	for f in files.keys():
-		registers += parse_file(arm_xml_path + "/"+ f)
-
-	print gen_entries(registers)
+	parse_arm_regs(xml_doc_path, True)
 
 
 if __name__ == "__main__":
