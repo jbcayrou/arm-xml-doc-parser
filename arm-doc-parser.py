@@ -211,15 +211,15 @@ def aarch32_registers_files(xml_doc_path):
 	root = tree.getroot()	
 	regs = root.findall(".//*register_link")
 
-	files = []
+	files = OrderedDict()
 	for r in regs:
 		f = r.attrib["registerfile"]
-		files.append(f)
+		files[f] =1
 
 
 	registers = []
 
-	for f in files:
+	for f in files.keys():
 		registers += parse_file(arm_xml_path + "/"+ f)
 
 	print gen_entries(registers)
@@ -237,15 +237,14 @@ def aarch64_registers_files(xml_doc_path):
 	root = tree.getroot()	
 	regs = root.findall(".//*register_link")
 
-	files = []
+	files = OrderedDict()
 	for r in regs:
 		f = r.attrib["registerfile"]
-		files.append(f)
+		files[f] =1
 
 
 	registers = []
-
-	for f in files:
+	for f in files.keys():
 		registers += parse_file(arm_xml_path + "/"+ f)
 
 	print gen_entries(registers)
