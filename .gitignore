@@ -1,3 +1,6 @@
+#Arm doc folder
+arm-doc/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
