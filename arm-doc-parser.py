@@ -11,6 +11,7 @@ import sys
 import os
 import xml.etree.ElementTree as ET
 import copy
+from collections import OrderedDict
 
 DEBUG=0
 
@@ -116,7 +117,6 @@ def parse_file(filename):
 									tmp_varfields[key]["tmp_val"] = encbit_val
 									tmp_varfields[key]["msb"] = msb
 									tmp_varfields[key]["lsb"] = lsb
-
 					else:
 						val = int(enc.attrib["v"], 2)
 					obj[key] = val
@@ -129,6 +129,7 @@ def parse_file(filename):
 
 				for variable in root.find(".//*reg_variables"):
 					variable_name_iter = variable.attrib["variable"]
+					debug("Proccess variable '%s'" % variable_name_iter)
 					vals = []
 					new_tmp_gen_objs = []
 
@@ -162,20 +163,24 @@ def parse_file(filename):
 							new_tmp_gen_objs.append(tmp_new_obj)
 
 					tmp_gen_objs = list(new_tmp_gen_objs) # Copy the list
-					break
+
 				# Update register name by remplacing <X> variables
 				debug("Registers generated : %d " % len(tmp_gen_objs))
 				for tmp_obj in tmp_gen_objs:
 
 					for gen_name, gen_val  in tmp_obj["varname_gen"].items():
 						tmp_obj["reg_name"] = tmp_obj["reg_name"].replace("<%s>"%gen_name, "%s"%gen_val)
-				obj_list = tmp_gen_objs
+				obj_list += tmp_gen_objs
 	debug("****************************")
 	debug(obj_list)
 	debug("****************************")
 
-	return obj_list
+	#Remove doublon, for instance in AArch32-icv_igrpen0.xml ICV_IGRPEN0 is defined twice
+	ret_list = OrderedDict()
+	for o in obj_list:
+		ret_list[o["reg_name"]] = o
 
+	return ret_list.values()
 
 def gen_entries(objs):
 
