@@ -2,7 +2,7 @@
 # Copyright (C) Jean-Baptiste Cayrou
 # This program is published under a MIT license
 # 
-# Tool that extracts co processor registers from XML ARM documentation:
+# Tool that extracts co processor registers from XML ARM documentation
 # https://developer.arm.com/-/media/developer/products/architecture/armv8-a-architecture/ARMv83A-SysReg-00bet4.tar.gz?la=en
 #
 # Usage : python ./arm-doc-parser.py ./arm-doc/SysReg_v83A_xml-00bet4/
@@ -71,8 +71,6 @@ def parse_file(filename):
 
 				obj["execution_state"] = execution_state
 				obj["access_instruction"] = access_instruction
-				obj["CRn"] = 0 # CRn does not exist for MRRC
-				obj["opc2"] = 0 # opc2 does not exist for MRRC
 
 				if ("asmname" in vardef.attrib and vardef.attrib["asmname"] == "systemreg" ):
 					obj["reg_name"] = vardef.attrib["asmvalue"]
@@ -120,6 +118,11 @@ def parse_file(filename):
 					else:
 						val = int(enc.attrib["v"], 2)
 					obj[key] = val
+
+				if "CRn" not in obj:
+					obj["CRn"] = 0 # CRn does not exist for MRRC
+				if "opc2" not in obj:
+					obj["opc2"] = 0 # opc2 does not exist for MRRC
 
 			# Need to generate all registers and replace REG_NAME<n> by 'n' values
 			if len(tmp_varfields.keys())==0:
